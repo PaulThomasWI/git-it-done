@@ -1,7 +1,10 @@
-var userFormElement      = document.querySelector("#user-form");
-var nameInputElement     = document.querySelector("#idUserName");
-var repoContainerElement = document.querySelector("#repos-container");
-var repoSearchTerm       = document.querySelector("#repo-search-term");
+var userFormElement        = document.querySelector("#user-form");
+var nameInputElement       = document.querySelector("#idUserName");
+var repoContainerElement   = document.querySelector("#repos-container");
+var repoSearchTerm         = document.querySelector("#repo-search-term");
+var languageButtonsElement = document.querySelector("#language-buttons");
+
+var myShowGitHubUser = 0;
 
 var getUserRepos = function(myUser) 
 {
@@ -12,8 +15,8 @@ var getUserRepos = function(myUser)
         if (myResponse.ok) {
             myResponse.json().then(function(aryGitHub) 
             {
-              console.log(aryGitHub);
-            displayRepos(aryGitHub, myUser);
+                myShowGitHubUser = 0;
+                displayRepos(aryGitHub, myUser);
             });
         } else {
             alert("Error: GitHub User Not Found");
@@ -47,8 +50,14 @@ var displayRepos = function(repos, searchTerm) {
         //console.log(repoElement);        
 
         var titleElement = document.createElement("span");
-        var myRepoName = repoName.split("/");
-        titleElement.textContent = myRepoName[1];
+
+        if (myShowGitHubUser === 0) {
+            myRepoName = repoName.split("/")[1];
+        } else {
+            myRepoName = repoName;
+        }
+        
+        titleElement.textContent = myRepoName;
 
         //console.log(titleElement);        
 
@@ -69,6 +78,24 @@ var displayRepos = function(repos, searchTerm) {
     }
 }
 
+var getFeaturedRepos = function(language) {
+    var myAPIURL = "https://api.github.com/search/repositories?q=" + language + "+is:featured&sort=help-wanted-issues";
+
+    fetch(myAPIURL).then(function(myReponse) 
+    {
+        if (myReponse.ok) {
+            myReponse.json().then(function(myData) 
+            {
+                myShowGitHubUser = 1;
+                displayRepos(myData.items, language);
+            });
+            console.log(myReponse);
+        } else {
+            alert('Error: GitHub User Not Found');
+        }
+    });
+}
+
 var formSubmitHandler = function(event) {
     event.preventDefault();
     console.log(event);
@@ -83,5 +110,17 @@ var formSubmitHandler = function(event) {
     }
 }
 
+var buttonClickHandler = function(event) {
+    var language = event.target.getAttribute("data-language");
+
+    // console.log(language);
+    if (language) {
+        getFeaturedRepos(language);
+        repoContainerElement.textContent = "";
+    }
+}
+
 // getUserRepos("paulthomaswi");
 userFormElement.addEventListener("submit", formSubmitHandler);
+
+languageButtonsElement.addEventListener("click", buttonClickHandler);
